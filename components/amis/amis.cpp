@@ -213,7 +213,7 @@ namespace esphome
               memcpy(&temp, &this->decode_buffer[i], data_len);
               ESP_LOGD(TAG, "1.8.0: %d", temp);
               if (this->energy_a_positive_sensor)
-                this->energy_a_positive_sensor->publish_state(temp);
+                this->energy_a_positive_sensor->publish_state(temp*0.001);
             }
             break;
           case 0x83:
@@ -223,7 +223,7 @@ namespace esphome
               memcpy(&temp, &this->decode_buffer[i], data_len);
               ESP_LOGD(TAG, "2.8.0: %d", temp);
               if (this->energy_a_negative_sensor)
-                this->energy_a_negative_sensor->publish_state(temp);
+                this->energy_a_negative_sensor->publish_state(temp*0.001);
             }
             break;
           case 0xfb:
@@ -233,7 +233,7 @@ namespace esphome
               memcpy(&temp, &this->decode_buffer[i], data_len);
               ESP_LOGD(TAG, "3.8.1: %d", temp);
               if (this->reactive_energy_a_positive_sensor)
-                this->reactive_energy_a_positive_sensor->publish_state(temp);
+                this->reactive_energy_a_positive_sensor->publish_state(temp*0.001);
             }
             if (dif == 0x84 && dife == 0x10 && vife == 0x3c)
             {
@@ -241,7 +241,7 @@ namespace esphome
               memcpy(&temp, &this->decode_buffer[i], data_len);
               ESP_LOGD(TAG, "4.8.1: %d", temp);
               if (this->reactive_energy_a_negative_sensor)
-                this->reactive_energy_a_negative_sensor->publish_state(temp);
+                this->reactive_energy_a_negative_sensor->publish_state(temp*0.001);
             }
             if (dif == 0x04 && dife == 0x00 && vife == 0x14)
             {
