@@ -6,7 +6,7 @@ from esphome.const import (
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_TIMESTAMP,
-    ICON_EMPTY,
+    DEVICE_CLASS_RUNNING,
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL_INCREASING,
     UNIT_WATT,
@@ -14,6 +14,7 @@ from esphome.const import (
     UNIT_SECOND,
     UNIT_KILOVOLT_AMPS_REACTIVE_HOURS,
     UNIT_VOLT_AMPS_REACTIVE,
+    ENTITY_CATEGORY_DIAGNOSTIC,
 )
 
 DEPENDENCIES = ["uart"]
@@ -31,6 +32,7 @@ CONF_INSTANTANEOUS_POWER_A_NEGATIVE = "instantaneous_power_a_negative"
 CONF_REACTIVE_INSTANTANEOUS_POWER_A_POSITIVE = "reactive_instantaneous_power_a_positive"
 CONF_REACTIVE_INSTANTANEOUS_POWER_A_NEGATIVE = "reactive_instantaneous_power_a_negative"
 CONF_TIMESTAMP = "timestamp"
+CONF_AMIS_ONLINE = "amis_online"
 
 CONFIG_SCHEMA = (
     cv.Schema(
@@ -94,6 +96,9 @@ CONFIG_SCHEMA = (
                 accuracy_decimals=0,
                 device_class=DEVICE_CLASS_TIMESTAMP,
             ),
+            cv.Optional(CONF_AMIS_ONLINE): sensor.sensor_schema(
+                entity_category=ENTITY_CATEGORY_DIAGNOSTIC
+            ),
         }
     )
     .extend(cv.COMPONENT_SCHEMA)
@@ -118,6 +123,7 @@ def to_code(config):
         CONF_REACTIVE_INSTANTANEOUS_POWER_A_POSITIVE,
         CONF_REACTIVE_INSTANTANEOUS_POWER_A_NEGATIVE,
         CONF_TIMESTAMP,
+        CONF_AMIS_ONLINE,
     ]:
         if not key in config:
             continue

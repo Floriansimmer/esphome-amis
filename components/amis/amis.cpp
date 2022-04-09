@@ -179,6 +179,8 @@ namespace esphome
 
           i++;
 
+          this->set_amis_online(true);
+
           switch (vif)
           {
           case 0x6d:
@@ -213,7 +215,7 @@ namespace esphome
               memcpy(&temp, &this->decode_buffer[i], data_len);
               ESP_LOGD(TAG, "1.8.0: %d", temp);
               if (this->energy_a_positive_sensor)
-                this->energy_a_positive_sensor->publish_state(temp*0.001);
+                this->energy_a_positive_sensor->publish_state(temp * 0.001);
             }
             break;
           case 0x83:
@@ -223,7 +225,7 @@ namespace esphome
               memcpy(&temp, &this->decode_buffer[i], data_len);
               ESP_LOGD(TAG, "2.8.0: %d", temp);
               if (this->energy_a_negative_sensor)
-                this->energy_a_negative_sensor->publish_state(temp*0.001);
+                this->energy_a_negative_sensor->publish_state(temp * 0.001);
             }
             break;
           case 0xfb:
@@ -233,7 +235,7 @@ namespace esphome
               memcpy(&temp, &this->decode_buffer[i], data_len);
               ESP_LOGD(TAG, "3.8.1: %d", temp);
               if (this->reactive_energy_a_positive_sensor)
-                this->reactive_energy_a_positive_sensor->publish_state(temp*0.001);
+                this->reactive_energy_a_positive_sensor->publish_state(temp * 0.001);
             }
             if (dif == 0x84 && dife == 0x10 && vife == 0x3c)
             {
@@ -241,7 +243,7 @@ namespace esphome
               memcpy(&temp, &this->decode_buffer[i], data_len);
               ESP_LOGD(TAG, "4.8.1: %d", temp);
               if (this->reactive_energy_a_negative_sensor)
-                this->reactive_energy_a_negative_sensor->publish_state(temp*0.001);
+                this->reactive_energy_a_negative_sensor->publish_state(temp * 0.001);
             }
             if (dif == 0x04 && dife == 0x00 && vife == 0x14)
             {
@@ -284,11 +286,6 @@ namespace esphome
 
           i += data_len;
         }
-        if (amisNotOnline)
-        {
-          amisNotOnline = false;
-          ESP_LOGD(TAG, "Data synced");
-        }
       }
       else
       {
@@ -299,7 +296,7 @@ namespace esphome
 
     void amis::AMISComponent::reset_telegram()
     {
-      log_packet(this->receive_buffer, this->receive_buffer_index);
+      // log_packet(this->receive_buffer, this->receive_buffer_index);
       this->header_found = false;
       this->footer_found = false;
       this->ack_found = false;
@@ -312,6 +309,20 @@ namespace esphome
 
     void amis::AMISComponent::dump_config()
     {
+    }
+
+    void amis::AMISComponent::set_amis_online(bool state)
+    {
+      if (state != this->amis_online)
+      {
+        this->amis_online = state;
+        if (this->amis_online_sensor)
+        {
+          this->amis_online_sensor->publish_state(state);
+        }
+
+        ESP_LOGD(TAG, "AMIS online");
+      }
     }
 
     void amis::AMISComponent::log_packet(uint8_t array[], size_t length)
@@ -372,6 +383,9 @@ namespace esphome
       if (this->receive_timeout_reached())
       {
         ESP_LOGW(TAG, "Timeout while reading data for telegram");
+
+        this->set_amis_online(false);
+
         this->reset_telegram();
       }
       return false;
@@ -410,7 +424,7 @@ namespace esphome
         {
           this->reset_telegram();
           ESP_LOGE(TAG, "Error: encrypted telegram larger than buffer (%d bytes)", this->max_telegram_length);
-          log_packet(this->receive_buffer, this->receive_buffer_index);
+          // log_packet(this->receive_buffer, this->receive_buffer_index);
           return;
         }
 
@@ -418,30 +432,30 @@ namespace esphome
         this->receive_buffer[this->receive_buffer_index] = c;
         this->receive_buffer_index++;
 
-        //Check for complete ack telegram
+        // Check for complete ack telegram
         if (this->ack_found && this->receive_buffer_index >= 5)
         {
           if (memcmp(this->receive_buffer, "\x10\x40\xF0\x30\x16", 5) == 0)
           {
             ESP_LOGD(TAG, "ack'ed frame");
-            log_packet(this->receive_buffer, this->receive_buffer_index);
+            // log_packet(this->receive_buffer, this->receive_buffer_index);
             this->write_byte(0xe5);
             this->reset_telegram();
             continue;
           }
         }
 
-        if(this->header_found && this->expect_frame_length==0 && this->receive_buffer[0] == 0x68 && this->receive_buffer[3] == 0x68)
+        if (this->header_found && this->expect_frame_length == 0 && this->receive_buffer[0] == 0x68 && this->receive_buffer[3] == 0x68)
         {
           ESP_LOGD(TAG, "Frame valid");
           this->expect_frame_length = this->receive_buffer[1] + 6;
         }
-          
-        //Decode Frame
+
+        // Decode Frame
         if (this->expect_frame_length && this->receive_buffer_index >= this->expect_frame_length)
         {
           ESP_LOGD(TAG, "amis_decode");
-          log_packet(this->receive_buffer, this->receive_buffer_index);
+          // log_packet(this->receive_buffer, this->receive_buffer_index);
           amis_decode();
 
           this->reset_telegram();

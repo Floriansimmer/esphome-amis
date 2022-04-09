@@ -22,7 +22,7 @@ namespace esphome
       void dump_config() override;
       void amis_decode();
       void set_power_grid_key(const std::string &power_grid_key);
-      
+
       void set_energy_a_positive_sensor(sensor::Sensor *sensor)
       {
         this->energy_a_positive_sensor = sensor;
@@ -59,6 +59,10 @@ namespace esphome
       {
         this->timestamp_sensor = sensor;
       }
+      void set_amis_online_sensor(sensor::Sensor *sensor)
+      {
+        this->amis_online_sensor = sensor;
+      }
 
       float get_setup_priority() const override { return setup_priority::DATA; }
 
@@ -66,12 +70,13 @@ namespace esphome
       unsigned long lastRead = 0; // Timestamp when data was last read
       int readTimeout = 100;      // Time to wait after last byte before considering data complete
       void log_packet(uint8_t array[], size_t length);
+      void set_amis_online(bool state);
 
     protected:
-      int receive_buffer_index = 0;               // Current position of the receive buffer
-      const static int receive_buffer_size = 256; // Size of the receive buffer
+      int receive_buffer_index = 0;                // Current position of the receive buffer
+      const static int receive_buffer_size = 256;  // Size of the receive buffer
       uint8_t receive_buffer[receive_buffer_size]; // Stores the packet currently being received
-      uint8_t decode_buffer[128];                // Stores the packet currently being decoded
+      uint8_t decode_buffer[128];                  // Stores the packet currently being decoded
 
       /// Wait for UART data to become available within the read timeout.
       ///
@@ -85,19 +90,19 @@ namespace esphome
       bool available_within_timeout();
 
       // Read telegram
-      uint32_t receive_timeout=10000;
+      uint32_t receive_timeout = 10000;
       bool receive_timeout_reached();
-      uint32_t last_read_time=0;
-      bool ack_found=false;
-      bool header_found=false;
-      bool footer_found=false;
-      size_t max_telegram_length=128;
+      uint32_t last_read_time = 0;
+      bool ack_found = false;
+      bool header_found = false;
+      bool footer_found = false;
+      size_t max_telegram_length = 128;
 
       int expect_frame_length = 0;
       uint8_t iv[16];
       uint8_t key[16];
       uint32_t ms = 0;
-      bool amisNotOnline = true;
+      bool amis_online = false;
       sensor::Sensor *energy_a_positive_sensor{nullptr};
       sensor::Sensor *energy_a_negative_sensor{nullptr};
       sensor::Sensor *reactive_energy_a_positive_sensor{nullptr};
@@ -107,7 +112,8 @@ namespace esphome
       sensor::Sensor *reactive_instantaneous_power_a_positive_sensor{nullptr};
       sensor::Sensor *reactive_instantaneous_power_a_negative_sensor{nullptr};
       sensor::Sensor *timestamp_sensor{nullptr};
+      sensor::Sensor *amis_online_sensor{nullptr};
     };
 
-  } // namespace rdm6300
-} // namespace esphome
+  }
+}
