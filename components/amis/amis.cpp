@@ -86,10 +86,10 @@ namespace esphome
       int i;
       uint32_t temp;
       struct tm t;
-      uint8_t dif;
-      uint8_t vif;
-      uint8_t dife;
-      uint8_t vife;
+      uint8_t dif; // Data Information Field - Control field in a variable data point of the M-Bus protocol, defining resolution and additional controls.
+      uint8_t vif; // Value Information Field - Element of the M-Bus protocol to define unit and scaling of a data point.
+      uint8_t dife; // Data Information Field Extension - Extension of the control field; refer to DIF
+      uint8_t vife; // VIF Extension - Extension of the VIF
       uint8_t data_len;
 
       if (this->receive_buffer_index < 78)
@@ -181,6 +181,7 @@ namespace esphome
 
           this->set_amis_online(true);
 
+          //ESP_LOGD(TAG, "VIF = %x,VIFE = %x, DIF = %x, DIFE = %x", vif, vife, dif, dife );
           switch (vif)
           {
           case 0x6d:
@@ -226,7 +227,7 @@ namespace esphome
               ESP_LOGD(TAG, "2.8.0: %d", temp);
               if (this->energy_a_negative_sensor)
                 this->energy_a_negative_sensor->publish_state(temp * 0.001);
-            }
+            }           
             break;
           case 0xfb:
             if (dif == 0x84 && dife == 0x10 && vife == 0x73)
